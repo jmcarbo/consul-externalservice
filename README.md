@@ -49,3 +49,10 @@ Install
 
 You only need to download the consul-externalservice executable and have a properly configured consul network accesible through localhost:8500.
 
+Executables can be found here: https://github.com/jmcarbo/consul-externalservice/releases/tag/v0.0.1
+
+
+Development
+===========
+
+Clone repository. Use `make test` to run tests and `make build` to create binaries.
