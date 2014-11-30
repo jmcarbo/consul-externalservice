@@ -30,8 +30,7 @@ curl -XPUT http://localhost:8500/v1/kv/ExternalServices/<nodename>/<servicename>
 TargetState must be one of:
 "stopped" (if you currently do not want the service to be watched), "running" (if
 you DO want the service to be watched), and "deleted" if you want the service
-definition to be deleted by the service node watcher. Delete is not currently implemented 
-but can be easily added.
+definition to be deleted by the service node watcher. 
 
 Thus external services can be defined from any consul accessible point but will not be instantiated if there is no consul-externalservice watcher running for
 the defined external service node.
