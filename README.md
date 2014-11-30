@@ -5,7 +5,7 @@ the status of their associated check.  This feature is not implemented in consul
 break consul's node level design. Checks are run and associated at one or many arbitrary consul nodes.
 
 Every service must have at least a check associated with a node. External services nodes are arbitrary names and do not 
-need to follow consul's node names. But checks associated with an external service must be run and defined in a real consul node.
+need to follow consul's node names. Checks associated with an external service must be run and defined in a real consul node.
 This is due to the inner designs of consul that run antientropy at the node level.
 
 Usage
@@ -53,7 +53,7 @@ Install
 
 You only need to download the consul-externalservice executable and have a properly configured consul network accesible through localhost:8500.
 
-Executables can be found here: https://github.com/jmcarbo/consul-externalservice/releases/tag/v0.0.1
+Executables can be found here: https://github.com/jmcarbo/consul-externalservice/releases/tag/v0.0.2
 
 Docker
 ======
