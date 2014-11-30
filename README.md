@@ -1,3 +1,5 @@
+** WARNING!!!! Alpha software **
+
 Consul-externalservice implements external services in consul that follow
 the status of their associated check.  This feature is not implemented in consul itself because it would
 break consul's node level design. Checks are run and associated at one or many arbitrary consul nodes.
@@ -21,13 +23,15 @@ from the consul node attached to the running consul-externalservice instance (cu
 Consul external services are defined by creating a key-value pair in consul's database. Example:
 
 ```
-curl -XPUT http://localhost:8500/v1/kv/ExternalServices/<nodename>/<servicename> -d '{ "Address":"localhost", "Port":80, "Interval":"1s", "Command":"ping -c 1 localhost", "TargetState":"running" }'
+curl -XPUT http://localhost:8500/v1/kv/ExternalServices/<nodename>/<servicename> \
+  -d '{ "Address":"localhost", "Port":80, "Interval":"1s", "Command":"ping -c 1 localhost", "TargetState":"running" }'
 ```
 
 TargetState must be one of:
 "stopped" (if you currently do not want the service to be watched), "running" (if
 you DO want the service to be watched), and "deleted" if you want the service
-definition to be deleted by the service node watcher.
+definition to be deleted by the service node watcher. Delete is not currently implemented 
+but can be easily added.
 
 Thus external services can be defined from any consul accessible point but will not be instantiated if there is no consul-externalservice watcher running for
 the defined external service node.
