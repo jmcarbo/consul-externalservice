@@ -14,7 +14,7 @@ Usage
 Run
 
 ```
-consul-externalservice start <nodename>
+consul-externalservice start --node <nodename>
 ```
 
 This command starts an external service watcher for any service defined at nodename. Nodename is an arbitrary name. All checks are defined and run
@@ -55,6 +55,14 @@ You only need to download the consul-externalservice executable and have a prope
 
 Executables can be found here: https://github.com/jmcarbo/consul-externalservice/releases/tag/v0.0.1
 
+Docker
+======
+
+If you want to run a dockerized consul-externalservice:
+
+```
+docker run -d jmcarbo/consul-externalservice /bin/start.sh <consul address to join to>
+```
 
 Development
 ===========

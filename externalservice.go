@@ -106,8 +106,6 @@ func (es *ExternalService) Save() error {
 }
 
 func (es *ExternalService) Register() error {
-  es.definition.TargetState="running"
-  es.Save()
   _, err := es.client.Catalog().Register(&consulapi.CatalogRegistration{Node: es.node, Address: es.definition.Address,
     Service: &consulapi.AgentService { ID: es.service, Service: es.service, Port: es.definition.Port }}, nil)
   if err != nil {
@@ -154,15 +152,20 @@ func (es *ExternalService) UnregisterService() error {
   return nil
 }
 
-func (es *ExternalService) Unregister() error {
-  es.definition.TargetState="running"
+func (es *ExternalService) SetTargetState(state string) error {
+  es.definition.TargetState=state
   es.Save()
+  return nil
+}
 
-  _, err := es.client.Catalog().Deregister(&consulapi.CatalogDeregistration{Node: es.node, Address: es.definition.Address, ServiceID: es.service }, nil)
+func (es *ExternalService) Unregister() error {
+
+  checkName := fmt.Sprintf("check:%s:%s", es.service, es.node)
+  err :=	es.client.Agent().CheckDeregister(checkName)
   if err != nil {
     return nil
   }
-	err =	es.client.Agent().CheckDeregister(es.service)
+  _, err = es.client.Catalog().Deregister(&consulapi.CatalogDeregistration{Node: es.node, Address: es.definition.Address, ServiceID: es.service }, nil)
   if err != nil {
     return nil
   }
@@ -188,6 +191,7 @@ func (es *ExternalService) IsHealthy() bool {
   }
   checkName := fmt.Sprintf("check:%s:%s", es.service, es.node)
   if checks != nil && checks[checkName]!=nil && checks[checkName].Status == "passing" {
+    //log.Printf("%#v", checks[checkName])
     return true
   }
   return false
@@ -203,6 +207,12 @@ func (es *ExternalService) CheckStatus() string {
     return checks[checkName].Status
   }
   return "unknown"
+}
+
+func (es *ExternalService) Destroy() error {
+  eKey := fmt.Sprintf("ExternalServices/%s/%s", es.node, es.service)
+  _, err := es.client.KV().Delete(eKey, nil)
+  return err
 }
 
 func DestroyAllExternalServices(client *consulapi.Client) error {
@@ -252,11 +262,11 @@ func (esw *ExternalServiceWatcher) Run() error {
   go func(){
     var modi uint64
     modi = 0
-    qname := fmt.Sprintf("ExternalServices/%s", esw.node)
+    qname := fmt.Sprintf("ExternalServices/%s/", esw.node)
     dur, err := time.ParseDuration("3s")
     if err != nil {
       esw.setState("stopped")
-      return 
+      return
     }
     for {
       keys, qm, err := esw.client.KV().List(qname, &consulapi.QueryOptions{AllowStale: false, RequireConsistent: true, WaitTime: dur, WaitIndex: modi})
@@ -269,6 +279,7 @@ func (esw *ExternalServiceWatcher) Run() error {
         if len(parts) == 3 {
           node := parts[1]
           service := parts[2]
+
           es := NewExternalServiceFromConsul(esw.client, service, node)
           if es != nil {
             if es.definition.TargetState == "running" {
@@ -277,10 +288,12 @@ func (esw *ExternalServiceWatcher) Run() error {
               }
             }
             if es.definition.TargetState == "stopped" {
+              //log.Printf("%#v", es.definition)
               es.Unregister()
             }
             if es.definition.TargetState == "deleted" {
               es.Unregister()
+              es.Destroy()
             }
           }
         }
@@ -325,14 +338,21 @@ func (esw *ExternalServiceWatcher) Run() error {
             //log.Infof("Getting %s x--------> %s", service, node)
             es := NewExternalServiceFromConsul(esw.client, service, node)
             if es != nil {
-              if a.Status == "passing" {
+              if a.Status == "passing" && es.definition.TargetState == "running" {
                 es.Register()
                 //log.Infof("Registering %s --------> %s ----> %s ----> %s", service, node, esw.node, a.Status)
               }
               if a.Status == "critical" {
-                err:=es.UnregisterService()
-                if err != nil {
-                  log.Error("unregistering service %s", service)
+                if es.definition.TargetState == "running"{
+                  err:=es.Unregister()
+                  if err != nil {
+                    log.Error("unregistering service %s", service)
+                  }
+                } else {
+                  err:=es.UnregisterService()
+                  if err != nil {
+                    log.Error("unregistering service %s. Check still active", service)
+                  }
                 }
                 //log.Infof("UnRegistering %s --------> %s ----> %s ----> %s", service, node, esw.node, a.Status)
               }
