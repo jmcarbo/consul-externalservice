@@ -76,6 +76,40 @@ func main() {
 				}
 			},
 		},
+		{
+			Name:      "export",
+			ShortName: "e",
+			Usage:     "export service definitions",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "file",
+					Value: "export.yaml",
+					Usage: "export file name",
+				},
+			},
+			Action: func(c *cli.Context) {
+				client := cesw.Connect()
+        log.Infof("Exporting services to %s", c.String("file"))
+        cesw.BackupExternalServicesToYAML(client, c.String("file"))
+      },
+    },
+		{
+			Name:      "import",
+			ShortName: "i",
+			Usage:     "import service definitions",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "file",
+					Value: "export.yaml",
+					Usage: "import file name",
+				},
+			},
+			Action: func(c *cli.Context) {
+				client := cesw.Connect()
+        log.Infof("Importing services from %s", c.String("file"))
+        cesw.RestoreExternalServicesFromYAML(client, c.String("file"))
+      },
+    },
 	}
 	app.Run(os.Args)
 }

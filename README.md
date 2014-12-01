@@ -47,6 +47,30 @@ dig @localhost -p 8600 <servicename>.service.consul
 NOTE that if the service watcher dies and there are no other watchers for the same external services node, checks will remain active as long as the consul
 agent is alive but will not activate or deactivate service when changing their status.
 
+Importing and exporting service definitions
+===========================================
+
+You can import and export service definitions in YAML format:
+
+```yaml
+
+- key: ExternalServices/node1/testlock11
+  value: '{"Address":"localhost","Port":80,"Command":"ping -c 2 localhost","State":"","Interval":"1s","TargetState":"running"}'
+- key: ExternalServices/node1/testlock15
+  value: '{"Address":"localhost","Port":80,"Command":"ping -c 2 localhost","State":"","Interval":"2s","TargetState":"stopped"}'
+```
+To export use:
+
+```
+consul-externalservice export -file <export file name>
+```
+
+To import use:
+
+```
+consul-externalservice export -file <export file name>
+```
+
 Install
 =======
 
