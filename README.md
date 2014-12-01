@@ -52,7 +52,7 @@ Install
 
 You only need to download the consul-externalservice executable and have a properly configured consul network accesible through localhost:8500.
 
-Executables can be found here: https://github.com/jmcarbo/consul-externalservice/releases/tag/v0.0.2
+Executables can be found here: https://github.com/jmcarbo/consul-externalservice/releases
 
 Docker
 ======
