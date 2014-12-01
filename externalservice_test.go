@@ -34,19 +34,19 @@ func TestExternalService(t *testing.T) {
 
 		g.It("can be created", func() {
 			client := Connect()
-			externalService := NewExternalService(client, "testlock1", "node1", "localhost", 80, "ping -c 2 localhost")
+			externalService := NewExternalService(client, "testlock1", "node1", "localhost", 80, "ping -c 2 localhost", "2s")
 			g.Assert(externalService != nil).IsTrue()
 		})
 		g.It("can be created from consul", func() {
 			client := Connect()
-			externalService := NewExternalService(client, "testlock1", "node1", "localhost", 80, "ping -c 2 localhost")
+			externalService := NewExternalService(client, "testlock1", "node1", "localhost", 80, "ping -c 2 localhost", "2s")
 			g.Assert(externalService != nil).IsTrue()
 			externalService2 := NewExternalServiceFromConsul(client, "testlock1", "node1")
 			g.Assert(externalService).Equal(externalService2)
 		})
 		g.It("can be registered", func() {
 			client := Connect()
-			es := NewExternalService(client, "testlock1", "node1", "localhost", 80, "ping -c 2 localhost")
+			es := NewExternalService(client, "testlock1", "node1", "localhost", 80, "ping -c 2 localhost", "2s")
 			es.SetTargetState("running")
 			err := es.Register()
 			g.Assert(err).Equal(nil)
@@ -54,7 +54,7 @@ func TestExternalService(t *testing.T) {
 
 		g.It("can be registered and healthy", func() {
 			client := Connect()
-			es := NewExternalService(client, "testlock3", "node1", "localhost", 80, "ping -c 2 localhost")
+			es := NewExternalService(client, "testlock3", "node1", "localhost", 80, "ping -c 2 localhost", "2s")
 			es.SetCheckInterval("1s")
 			es.SetTargetState("running")
 			err := es.Register()
@@ -66,7 +66,7 @@ func TestExternalService(t *testing.T) {
 
 		g.It("can be registered and ill", func() {
 			client := Connect()
-			es := NewExternalService(client, "testlock11", "node1", "localhost", 80, "ping -c 2 ost")
+			es := NewExternalService(client, "testlock11", "node1", "localhost", 80, "ping -c 2 ost", "2s")
 			es.SetCheckInterval("1s")
 			es.SetTargetState("running")
 			err := es.Register()
@@ -78,7 +78,7 @@ func TestExternalService(t *testing.T) {
 
 		g.It("can be unregistered", func() {
 			client := Connect()
-			es := NewExternalService(client, "testlock1", "node1", "localhost", 80, "ping -c 2 localhost")
+			es := NewExternalService(client, "testlock1", "node1", "localhost", 80, "ping -c 2 localhost", "2s")
 			es.SetTargetState("running")
 			err := es.Register()
 			g.Assert(err).Equal(nil)
@@ -89,9 +89,14 @@ func TestExternalService(t *testing.T) {
 
 		g.It("can be backed up to YAML file", func() {
 			client := Connect()
-			NewExternalService(client, "testlock15", "node1", "localhost", 80, "ping -c 2 ost")
-			NewExternalService(client, "testlock16", "node1", "localhost", 80, "ping -c 2 ost")
+			NewExternalService(client, "testlock15", "node1", "localhost", 80, "ping -c 2 ost", "2s")
+			NewExternalService(client, "testlock16", "node1", "localhost", 80, "ping -c 2 ost", "2s")
 			err := BackupExternalServicesToYAML(client, "backup.yaml")
+			g.Assert(err == nil).IsTrue()
+		})
+		g.It("can be restored from YAML file", func() {
+			client := Connect()
+			err := RestoreExternalServicesFromYAML(client, "backup.yaml")
 			g.Assert(err == nil).IsTrue()
 		})
 	})
@@ -135,10 +140,11 @@ func TestExternalService(t *testing.T) {
 			client := Connect()
 			esw := NewExternalServiceWatcher(client, "node10")
 			esw.Run()
-			es := NewExternalService(client, "testlock1", "node10", "localhost", 80, "ping -c 2 localhost")
+			es := NewExternalService(client, "testlock1", "node10", "localhost", 80, "ping -c 2 localhost", "2s")
 			es.SetTargetState("running")
 			es.Register()
-			time.Sleep(time.Second * 5)
+			//Needs default 10s to run test
+			time.Sleep(time.Second * 8)
 			//err:= esw.Stop()
 			g.Assert(es.IsHealthy()).IsTrue()
 			g.Assert(es.IsActive()).IsTrue()
@@ -255,7 +261,7 @@ func TestExternalService(t *testing.T) {
 			esw := NewExternalServiceWatcher(client, "node11")
 			esw.Run()
 			ioutil.WriteFile("test.txt", []byte("blabla"), 0666)
-			es := NewExternalService(client, "testlock1", "node11", "localhost", 80, "cat test.txt || if [[ \"$?\" == 1 ]]; then exit 2; fi")
+			es := NewExternalService(client, "testlock1", "node11", "localhost", 80, "cat test.txt || if [[ \"$?\" == 1 ]]; then exit 2; fi", "4s")
 			es.SetCheckInterval("1s")
 			es.SetTargetState("running")
 			es.Register()

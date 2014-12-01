@@ -53,9 +53,12 @@ type ExternalServiceDefinition struct {
 	TargetState string
 }
 
-func NewExternalService(client *consulapi.Client, service, node, address string, port int, command string) *ExternalService {
+func NewExternalService(client *consulapi.Client, service, node, address string, port int, command string, interval string) *ExternalService {
+	if interval == "" {
+		interval = "10s"
+	}
 	es := &ExternalService{service: service, node: node,
-		definition: &ExternalServiceDefinition{Address: address, Port: port, Command: command, TargetState: "stopped", Interval: "10s"}, client: client}
+		definition: &ExternalServiceDefinition{Address: address, Port: port, Command: command, TargetState: "stopped", Interval: interval}, client: client}
 
 	esKey := fmt.Sprintf("ExternalServices/%s/%s", es.node, es.service)
 	b, _ := json.Marshal(es.definition)
@@ -149,6 +152,7 @@ func (es *ExternalService) Save() error {
 }
 
 func (es *ExternalService) Register() error {
+	//log.Infof("%#v", es.definition)
 	_, err := es.client.Catalog().Register(&consulapi.CatalogRegistration{Node: es.node, Address: es.definition.Address,
 		Service: &consulapi.AgentService{ID: es.service, Service: es.service, Port: es.definition.Port}}, nil)
 	if err != nil {
@@ -157,6 +161,7 @@ func (es *ExternalService) Register() error {
 
 	if !es.CheckExists() {
 		checkName := fmt.Sprintf("check:%s:%s", es.service, es.node)
+		//log.Infof("----> Registering %s", checkName)
 		err = es.client.Agent().CheckRegister(&consulapi.AgentCheckRegistration{checkName, checkName, "",
 			consulapi.AgentServiceCheck{Interval: es.definition.Interval, Script: es.definition.Command}})
 		if err != nil {
@@ -208,10 +213,12 @@ func (es *ExternalService) Unregister() error {
 	if err != nil {
 		return nil
 	}
+
 	_, err = es.client.Catalog().Deregister(&consulapi.CatalogDeregistration{Node: es.node, Address: es.definition.Address, ServiceID: es.service}, nil)
 	if err != nil {
 		return nil
 	}
+
 	return nil
 }
 
@@ -233,6 +240,7 @@ func (es *ExternalService) IsHealthy() bool {
 		return false
 	}
 	checkName := fmt.Sprintf("check:%s:%s", es.service, es.node)
+	//log.Infof("%#v", checks[checkName])
 	if checks != nil && checks[checkName] != nil && checks[checkName].Status == "passing" {
 		//log.Printf("%#v", checks[checkName])
 		return true
@@ -386,7 +394,7 @@ func (esw *ExternalServiceWatcher) Run() error {
 								//log.Infof("Registering %s --------> %s ----> %s ----> %s", service, node, esw.node, a.Status)
 							}
 							if a.Status == "critical" {
-								if es.definition.TargetState == "running" {
+								if es.definition.TargetState != "running" {
 									err := es.Unregister()
 									if err != nil {
 										log.Error("unregistering service %s", service)
