@@ -1,0 +1,10 @@
+- key: ExternalServices/node1/testlock11
+  value: '{"Address":"localhost","Port":80,"Command":"ping -c 2 ost","State":"","Interval":"1s","TargetState":"running"}'
+- key: ExternalServices/node1/testlock15
+  value: '{"Address":"localhost","Port":80,"Command":"ping -c 2 ost","State":"","Interval":"10s","TargetState":"stopped"}'
+- key: ExternalServices/node1/testlock16
+  value: '{"Address":"localhost","Port":80,"Command":"ping -c 2 ost","State":"","Interval":"10s","TargetState":"stopped"}'
+- key: ExternalServices/node1/testlock1
+  value: '{"Address":"localhost","Port":80,"Command":"ping -c 2 localhost","State":"","Interval":"10s","TargetState":"stopped"}'
+- key: ExternalServices/node1/testlock3
+  value: '{"Address":"localhost","Port":80,"Command":"ping -c 2 localhost","State":"","Interval":"1s","TargetState":"running"}'
