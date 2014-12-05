@@ -13,8 +13,13 @@ Usage
 
 Run
 
-```
-consul-externalservice start --node <nodename>
+```shell
+consul-externalservice <global options> start --node <nodename>
+
+GLOBAL OPTIONS:
+   --address '127.0.0.1:8500'	consul address
+   --dc 			consul datacenter
+   --token 			consul token
 ```
 
 This command starts an external service watcher for any service defined at nodename. Nodename is an arbitrary name. All checks are defined and run

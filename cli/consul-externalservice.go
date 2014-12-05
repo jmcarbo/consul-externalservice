@@ -15,6 +15,23 @@ func main() {
 	app.Name = "consul-externalservice"
 	app.Usage = "manage consul external services!"
 	app.Version = "0.0.3"
+	app.Flags = []cli.Flag{
+		cli.StringFlag{
+			Name:  "address",
+			Value: "127.0.0.1:8500",
+			Usage: "consul address",
+		},
+		cli.StringFlag{
+			Name:  "dc",
+			Value: "",
+			Usage: "consul datacenter",
+		},
+		cli.StringFlag{
+			Name:  "token",
+			Value: "",
+			Usage: "consul token",
+		},
+	}
 	app.Commands = []cli.Command{
 		{
 			Name:      "version",
@@ -36,7 +53,7 @@ func main() {
 				},
 			},
 			Action: func(c *cli.Context) {
-				client := cesw.Connect()
+				client := cesw.Connect(c.GlobalString("address"), c.GlobalString("datacenter"), c.GlobalString("token"))
 				watcher := cesw.NewExternalServiceWatcher(client, c.String("node"))
 				if watcher != nil {
 					log.Printf("Starting external service watcher for node %s ...\n", c.String("node"))
@@ -88,11 +105,11 @@ func main() {
 				},
 			},
 			Action: func(c *cli.Context) {
-				client := cesw.Connect()
-        log.Infof("Exporting services to %s", c.String("file"))
-        cesw.BackupExternalServicesToYAML(client, c.String("file"))
-      },
-    },
+				client := cesw.Connect(c.GlobalString("address"), c.GlobalString("datacenter"), c.GlobalString("token"))
+				log.Infof("Exporting services to %s", c.String("file"))
+				cesw.BackupExternalServicesToYAML(client, c.String("file"))
+			},
+		},
 		{
 			Name:      "import",
 			ShortName: "i",
@@ -105,11 +122,11 @@ func main() {
 				},
 			},
 			Action: func(c *cli.Context) {
-				client := cesw.Connect()
-        log.Infof("Importing services from %s", c.String("file"))
-        cesw.RestoreExternalServicesFromYAML(client, c.String("file"))
-      },
-    },
+				client := cesw.Connect(c.GlobalString("address"), c.GlobalString("datacenter"), c.GlobalString("token"))
+				log.Infof("Importing services from %s", c.String("file"))
+				cesw.RestoreExternalServicesFromYAML(client, c.String("file"))
+			},
+		},
 	}
 	app.Run(os.Args)
 }

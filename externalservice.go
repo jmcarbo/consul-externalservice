@@ -20,8 +20,18 @@ import (
 
 //Connect establishes a connection to local running consul agent.
 //Currently only localhost:8500 is supported.
-func Connect() *consulapi.Client {
-	client, err := consulapi.NewClient(consulapi.DefaultConfig())
+func Connect(address, datacenter, token string) *consulapi.Client {
+	config := consulapi.DefaultConfig()
+	if address != "" {
+		config.Address = address
+	}
+	if datacenter != "" {
+		config.Datacenter = datacenter
+	}
+	if token != "" {
+		config.Token = token
+	}
+	client, err := consulapi.NewClient(config)
 	if err != nil {
 		log.Fatal(err)
 	}

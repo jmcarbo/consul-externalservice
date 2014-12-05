@@ -13,7 +13,7 @@ func initConsul() {
 	os.RemoveAll("/tmp/consul")
 	exec.Command("consul", "agent", "-server", "-bootstrap", "-data-dir=/tmp/consul").Start()
 	time.Sleep(time.Second * 15)
-	client := Connect()
+	client := Connect("", "", "")
 	DestroyAllExternalServices(client)
 }
 
@@ -33,19 +33,19 @@ func TestExternalService(t *testing.T) {
 		})
 
 		g.It("can be created", func() {
-			client := Connect()
+			client := Connect("", "", "")
 			externalService := NewExternalService(client, "testlock1", "node1", "localhost", 80, "ping -c 2 localhost", "2s")
 			g.Assert(externalService != nil).IsTrue()
 		})
 		g.It("can be created from consul", func() {
-			client := Connect()
+			client := Connect("", "", "")
 			externalService := NewExternalService(client, "testlock1", "node1", "localhost", 80, "ping -c 2 localhost", "2s")
 			g.Assert(externalService != nil).IsTrue()
 			externalService2 := NewExternalServiceFromConsul(client, "testlock1", "node1")
 			g.Assert(externalService).Equal(externalService2)
 		})
 		g.It("can be registered", func() {
-			client := Connect()
+			client := Connect("", "", "")
 			es := NewExternalService(client, "testlock1", "node1", "localhost", 80, "ping -c 2 localhost", "2s")
 			es.SetTargetState("running")
 			err := es.Register()
@@ -53,7 +53,7 @@ func TestExternalService(t *testing.T) {
 		})
 
 		g.It("can be registered and healthy", func() {
-			client := Connect()
+			client := Connect("", "", "")
 			es := NewExternalService(client, "testlock3", "node1", "localhost", 80, "ping -c 2 localhost", "2s")
 			es.SetCheckInterval("1s")
 			es.SetTargetState("running")
@@ -65,7 +65,7 @@ func TestExternalService(t *testing.T) {
 		})
 
 		g.It("can be registered and ill", func() {
-			client := Connect()
+			client := Connect("", "", "")
 			es := NewExternalService(client, "testlock11", "node1", "localhost", 80, "ping -c 2 ost", "2s")
 			es.SetCheckInterval("1s")
 			es.SetTargetState("running")
@@ -77,7 +77,7 @@ func TestExternalService(t *testing.T) {
 		})
 
 		g.It("can be unregistered", func() {
-			client := Connect()
+			client := Connect("", "", "")
 			es := NewExternalService(client, "testlock1", "node1", "localhost", 80, "ping -c 2 localhost", "2s")
 			es.SetTargetState("running")
 			err := es.Register()
@@ -88,14 +88,14 @@ func TestExternalService(t *testing.T) {
 		})
 
 		g.It("can be backed up to YAML file", func() {
-			client := Connect()
+			client := Connect("", "", "")
 			NewExternalService(client, "testlock15", "node1", "localhost", 80, "ping -c 2 ost", "2s")
 			NewExternalService(client, "testlock16", "node1", "localhost", 80, "ping -c 2 ost", "2s")
 			err := BackupExternalServicesToYAML(client, "backup.yaml")
 			g.Assert(err == nil).IsTrue()
 		})
 		g.It("can be restored from YAML file", func() {
-			client := Connect()
+			client := Connect("", "", "")
 			err := RestoreExternalServicesFromYAML(client, "backup.yaml")
 			g.Assert(err == nil).IsTrue()
 		})
@@ -111,14 +111,14 @@ func TestExternalService(t *testing.T) {
 		})
 
 		g.It("can create watcher", func() {
-			client := Connect()
+			client := Connect("", "", "")
 			esw := NewExternalServiceWatcher(client, "a")
 			g.Assert(esw != nil).IsTrue()
 			esw.Destroy()
 		})
 
 		g.It("can run watcher", func() {
-			client := Connect()
+			client := Connect("", "", "")
 			esw := NewExternalServiceWatcher(client, "a")
 			err := esw.Run()
 			time.Sleep(time.Second * 1)
@@ -127,7 +127,7 @@ func TestExternalService(t *testing.T) {
 		})
 
 		g.It("can run and stop watcher", func() {
-			client := Connect()
+			client := Connect("", "", "")
 			esw := NewExternalServiceWatcher(client, "node1")
 			esw.Run()
 			time.Sleep(time.Second * 1)
@@ -137,7 +137,7 @@ func TestExternalService(t *testing.T) {
 		})
 
 		g.It("can run with check passing", func() {
-			client := Connect()
+			client := Connect("", "", "")
 			esw := NewExternalServiceWatcher(client, "node10")
 			esw.Run()
 			es := NewExternalService(client, "testlock1", "node10", "localhost", 80, "ping -c 2 localhost", "2s")
@@ -154,7 +154,7 @@ func TestExternalService(t *testing.T) {
 		})
 
 		g.It("can activate service created with curl", func() {
-			client := Connect()
+			client := Connect("", "", "")
 			esw := NewExternalServiceWatcher(client, "node20")
 			esw.Run()
 			err := exec.Command("curl", "-XPUT", "http://localhost:8500/v1/kv/ExternalServices/node20/aservice", "-d { \"Address\":\"localhost\",\"Port\":80,\"Interval\":\"1s\",\"Command\":\"ping -c 1 localhost\",\"TargetState\":\"running\",\"State\":\"\" }").Run()
@@ -173,7 +173,7 @@ func TestExternalService(t *testing.T) {
 		})
 
 		g.It("can activate and deactivate service created with curl", func() {
-			client := Connect()
+			client := Connect("", "", "")
 			esw := NewExternalServiceWatcher(client, "node20")
 			esw.Run()
 			err := exec.Command("curl", "-XPUT", "http://localhost:8500/v1/kv/ExternalServices/node20/aservice", "-d { \"Address\":\"localhost\",\"Port\":80,\"Interval\":\"1s\",\"Command\":\"ping -c 1 localhost\",\"TargetState\":\"running\",\"State\":\"\" }").Run()
@@ -199,7 +199,7 @@ func TestExternalService(t *testing.T) {
 		})
 
 		g.It("can activate and destroy service created with curl", func() {
-			client := Connect()
+			client := Connect("", "", "")
 			esw := NewExternalServiceWatcher(client, "node20")
 			esw.Run()
 			err := exec.Command("curl", "-XPUT", "http://localhost:8500/v1/kv/ExternalServices/node20/aservice", "-d { \"Address\":\"localhost\",\"Port\":80,\"Interval\":\"1s\",\"Command\":\"ping -c 1 localhost\",\"TargetState\":\"running\",\"State\":\"\" }").Run()
@@ -223,7 +223,7 @@ func TestExternalService(t *testing.T) {
 		})
 
 		g.It("can activate service created with curl in two nodes", func() {
-			client := Connect()
+			client := Connect("", "", "")
 			esw := NewExternalServiceWatcher(client, "node21")
 			esw.Run()
 			esw2 := NewExternalServiceWatcher(client, "node22")
@@ -257,7 +257,7 @@ func TestExternalService(t *testing.T) {
 		})
 
 		g.It("can run with check bouncing", func() {
-			client := Connect()
+			client := Connect("", "", "")
 			esw := NewExternalServiceWatcher(client, "node11")
 			esw.Run()
 			ioutil.WriteFile("test.txt", []byte("blabla"), 0666)
@@ -279,7 +279,7 @@ func TestExternalService(t *testing.T) {
 		})
 
 		g.It("cannot run two watchers on same node", func() {
-			client := Connect()
+			client := Connect("", "", "")
 			esw := NewExternalServiceWatcher(client, "b")
 			esw.Run()
 			time.Sleep(time.Second * 1)
