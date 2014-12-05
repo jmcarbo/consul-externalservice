@@ -7,6 +7,7 @@ import (
 	"fmt"
 	log "github.com/Sirupsen/logrus"
 	"github.com/armon/consul-api"
+	apixtra "github.com/jmcarbo/consul-apixtra"
 	//"github.com/nu7hatch/gouuid"
 	"encoding/json"
 	"gopkg.in/yaml.v2"
@@ -276,7 +277,7 @@ type ExternalServiceWatcher struct {
 	client *consulapi.Client
 	state  string
 	slock  sync.Mutex
-	kvlock *Lock
+	kvlock *apixtra.Lock
 	stopCh chan struct{}
 	doneCh chan struct{}
 }
@@ -285,7 +286,7 @@ func NewExternalServiceWatcher(client *consulapi.Client, node string) *ExternalS
 	esw := &ExternalServiceWatcher{client: client, node: node}
 	esw.setState("stopped")
 	esKey := fmt.Sprintf("ExternalServicesWatchers/%s", esw.node)
-	esw.kvlock = NewLock(client, esKey)
+	esw.kvlock = apixtra.NewLock(client, esKey)
 	if esw.kvlock == nil {
 		return nil
 	}
